@@ -15,17 +15,17 @@ from .serializers import (
 )
 from .permissions import IsAuthorOrReadOnly
 
-class UserRegistrationView(generics.CreateAPIView):
-    queryset = User.objects.all()
+class UserRegistrationView(generics.CreateAPIView): #createapiview-> post request
+    queryset = User.objects.all() #generic views
     serializer_class = UserRegistrationSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.AllowAny] #allow anyone
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer.is_valid(raise_exception=True) #validate
         user = serializer.save()
         return Response({
-            "user": UserSerializer(user, context=self.get_serializer_context()).data,
+            "user": UserSerializer(user, context=self.get_serializer_context()).data, #convert to json
             "message": "User registered successfully",
         }, status=status.HTTP_201_CREATED)
 
@@ -39,12 +39,12 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 class UserDetailView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated] #jwt under the hood
     lookup_url_kwarg = 'user_id'
 
 class BlogListCreateView(generics.ListCreateAPIView):
     serializer_class = BlogSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly] #anyone can read
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'content', 'tags__name', 'category__name']
     ordering_fields = ['created_at', 'updated_at', 'view_count']
@@ -83,15 +83,15 @@ class BlogListCreateView(generics.ListCreateAPIView):
         return queryset.distinct()
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        serializer.save(author=self.request.user) #deserilise
 
-class BlogDetailView(generics.RetrieveUpdateDestroyAPIView):
+class BlogDetailView(generics.RetrieveUpdateDestroyAPIView): #generic view
     queryset = Blog.objects.all()
     serializer_class = BlogDetailSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
     lookup_field = 'slug'
     
-    def get(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs): #when get also increment views
         instance = self.get_object()
         # Increment the view count
         instance.increment_view()
@@ -103,7 +103,7 @@ class UserBlogsView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user_id = self.kwargs.get('user_id')
+        user_id = self.kwargs.get('user_id') #get user id from params
         user = get_object_or_404(User, id=user_id)
         
         # Only show published blogs unless the requester is the author
@@ -155,9 +155,9 @@ class UserFollowListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        return UserFollow.objects.filter(follower=self.request.user)
+        return UserFollow.objects.filter(follower=self.request.user) #filter those users where user is follower
 
-class UserFollowDetailView(generics.RetrieveDestroyAPIView):
+class UserFollowDetailView(generics.RetrieveDestroyAPIView): #retrive and destroy follo relationship
     serializer_class = UserFollowSerializer
     permission_classes = [permissions.IsAuthenticated]
     
@@ -197,7 +197,8 @@ def toggle_follow_user(request, user_id):
     follow_exists = UserFollow.objects.filter(
         follower=user, 
         followed=user_to_follow
-    ).exists()
+    ).exists() # check if user is already following the user
+    # If the follow relationship exists, delete it (unfollow)
     
     if follow_exists:
         UserFollow.objects.filter(follower=user, followed=user_to_follow).delete()

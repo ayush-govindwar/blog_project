@@ -2,8 +2,8 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Blog, Category, Tag, Comment, UserFollow, BlogAnalytics
 
-class UserSerializer(serializers.ModelSerializer):
-    follower_count = serializers.SerializerMethodField()
+class UserSerializer(serializers.ModelSerializer): #create serialiser based on model fields
+    follower_count = serializers.SerializerMethodField() #dont exits in db model but calc here
     following_count = serializers.SerializerMethodField()
     
     class Meta:
@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'follower_count', 'following_count']
     
     def get_follower_count(self, obj):
-        return obj.followers.count()
+        return obj.followers.count() #reverse relation
     
     def get_following_count(self, obj):
         return obj.following.count()
@@ -29,7 +29,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password": "Password fields didn't match."})
         return attrs
 
-    def create(self, validated_data):
+    def create(self, validated_data): #called when serializer.save
         validated_data.pop('password2')
         user = User.objects.create_user(**validated_data)
         return user
@@ -132,7 +132,7 @@ class BlogDetailSerializer(BlogSerializer):
             many=True
         ).data
 
-class UserFollowSerializer(serializers.ModelSerializer):
+class UserFollowSerializer(serializers.ModelSerializer): #nexted comments
     follower = UserSerializer(read_only=True)
     followed = UserSerializer(read_only=True)
     followed_id = serializers.IntegerField(write_only=True)
@@ -143,7 +143,7 @@ class UserFollowSerializer(serializers.ModelSerializer):
         read_only_fields = ['follower', 'created_at']
     
     def create(self, validated_data):
-        validated_data['follower'] = self.context['request'].user
+        validated_data['follower'] = self.context['request'].user #make sure follwer is current user
         return super().create(validated_data)
     
     def validate(self, attrs):

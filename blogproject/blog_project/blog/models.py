@@ -1,6 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User
-from django.utils.text import slugify
+from django.contrib.auth.models import User #built in
+from django.utils.text import slugify #url frinedly strings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
@@ -15,10 +15,10 @@ class Category(models.Model):
         verbose_name_plural = 'Categories'
         ordering = ['name']
 
-    def __str__(self):
+    def __str__(self): #display obj in string format
         return self.name
     
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs): #override default instance.save
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
@@ -60,7 +60,7 @@ class UserFollow(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('follower', 'followed')
+        unique_together = ('follower', 'followed') #prevent duplicates
         
     def __str__(self):
         return f"{self.follower.username} follows {self.followed.username}"
@@ -75,7 +75,7 @@ class Blog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='blogs')
-    tags = models.ManyToManyField(Tag, blank=True, related_name='blogs')
+    tags = models.ManyToManyField(Tag, blank=True, related_name='blogs') #many tags per blog
     is_published = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
     excerpt = models.TextField(blank=True, max_length=500)
@@ -89,7 +89,7 @@ class Blog(models.Model):
             self.slug = slugify(self.title)
         if not self.excerpt and self.content:
             # Create excerpt from content (first 150 chars)
-            self.excerpt = self.content[:150] + '...' if len(self.content) > 150 else self.content
+            self.excerpt = self.content[:150] + '...' if len(self.content) > 150 else self.content #basic summary
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -100,7 +100,7 @@ class Blog(models.Model):
         analytics = self.analytics.first()
         return analytics.view_count if analytics else 0
     
-    def increment_view(self):
+    def increment_view(self): #use generic relation
         analytics, created = self.analytics.get_or_create(
             content_type=ContentType.objects.get_for_model(self),
             object_id=self.id

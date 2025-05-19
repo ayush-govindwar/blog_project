@@ -6,9 +6,9 @@ class BlogAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'category', 'is_published', 'is_featured', 'created_at', 'updated_at', 'view_count')
     list_filter = ('is_published', 'is_featured', 'created_at', 'updated_at', 'category')
     search_fields = ('title', 'content', 'author__username', 'category__name')
-    prepopulated_fields = {'slug': ('title',)}
+    prepopulated_fields = {'slug': ('title',)} #fill slug based on title
     readonly_fields = ('created_at', 'updated_at')
-    filter_horizontal = ('tags',)
+    filter_horizontal = ('tags',) # for many-to-many fields
     
     def view_count(self, obj):
         return obj.view_count
